@@ -1,6 +1,6 @@
 //L298N Dual H-Bridge motor driver
 //Single motor test
-//No control for motor speed (only direction and on/off) because not using pin ENA
+//No control for motor speed (only direction and on/off) because not using pin ENA or ENB
 
 //Wiring:
 //L298N - Arduino Nano
@@ -12,11 +12,13 @@
 //+ve - +12V (L298N)
 //-ve - GND (Arduino)
 
+#define waitTime 1000
 #define IN1 9
 #define IN2 8
 
+bool motor1On = false;
+
 void setup() {
-  // Set motor connections as outputs
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
 
@@ -26,13 +28,8 @@ void setup() {
 }
 
 void loop() {
-  // Set motor forward
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
+  digitalWrite(IN1, motor1On);
+  digitalWrite(IN2, !motor1On);
   delay(1000);
-
-  // Set motor reverse
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  delay(1000);
+  motor1On = !motor1On;
 }
