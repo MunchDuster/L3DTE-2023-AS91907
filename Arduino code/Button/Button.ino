@@ -9,7 +9,7 @@
 #define buttonPin 9
 
 void setup() {
-  pinMode(buttonPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
   Serial.begin(9600);
 }
 
