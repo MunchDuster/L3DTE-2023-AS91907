@@ -6,14 +6,14 @@
 //+ve - D9
 //-ve - GND
 
-#define buttonPin 9
+#define buttonPin 8
 
 void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
-  Serial.begin(9600);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
-  bool buttonValue = digitalRead(buttonPin);
-  Serial.println(buttonValue);
+  bool buttonDown = !digitalRead(buttonPin); //Pull up is reverse normal input
+  digitalWrite(LED_BUILTIN, buttonDown);
 }

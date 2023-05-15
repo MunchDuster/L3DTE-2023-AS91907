@@ -3,11 +3,11 @@
 
 //Wiring:
 //LED - Arduino Nano
-//+ve - Resistor - D8
+//+ve - Resistor - D2
 //-ve - GND
 
 #define waitTime 1000
-#define ledPin 8
+#define ledPin 2
 
 void setup() {
   pinMode(ledPin, OUTPUT);
