@@ -48,7 +48,7 @@ void loop() {
     gyroXangle = gyroX * dt; // Calculate gyro angle without any filter
     kalAngleX = kalmanX.getAngle(accX, gyroX, dt); // Calculate the angle using a Kalman filter
 
-    Serial.print("Angle X: "); Serial.println(kalAngleX);
+   Serial.println(kalAngleX);
 
     delay(100);
 }
