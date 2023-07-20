@@ -1,17 +1,15 @@
 #include "Wire.h"
 #include "I2Cdev.h"
 #include "MPU6050.h"
-#include "Kalman.h"
 
 MPU6050 accelgyro;
-Kalman kalmanX;
 
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
 double accX, accY, accZ;
 double gyroX;
-double gyroXangle, kalAngleX;
+double gyroXangle;
 
 uint32_t timer; // Adding timer variable
 
@@ -25,7 +23,6 @@ void setup() {
     // Initialize kalman filter with the initial angle
     accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
     accX = atan((double)ay / sqrt((double)ax * ax + (double)az * az)) * RAD_TO_DEG;
-    kalmanX.setAngle(accX);
 
     timer = micros(); // Initialize timer at the end of setup
 }
@@ -46,9 +43,8 @@ void loop() {
     timer = micros(); // Update the timer for the next loop
 
     gyroXangle = gyroX * dt; // Calculate gyro angle without any filter
-    kalAngleX = kalmanX.getAngle(accX, gyroX, dt); // Calculate the angle using a Kalman filter
 
-   Serial.println(kalAngleX);
+   Serial.println(gyroXangle);
 
     delay(100);
 }
