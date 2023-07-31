@@ -1,5 +1,5 @@
 // Piezo Speaker test : Plays a little song in A major
-// Tutorial link: http://www.ardumotive.com/how-to-use-a-buzzerPin-en.html
+// Tutorial link: http://www.ardumotive.com/how-to-use-a-buzzer-en.html
 
 //Note: Buzzer should have at least 100 ohm resistor from arduino into positive terminal
 const int buzzerPin = 2;
