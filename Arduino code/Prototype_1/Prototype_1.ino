@@ -1,7 +1,7 @@
 //Prototype 1
 //Parts: L298N, LEDs, Buttons, (Later) Accelerometer
 //Not included: MPU6050 acceleromter and gyro
-
+  
 //Wiring:
 //L298N - Arduino Nano//
 //GND - GND
@@ -16,43 +16,44 @@
 #include <List.hpp>
 
 //Button input pins
-const int forwardButton = 10;
-const int rightButton = 11;
-const int leftButton = 12;
-const int backButton = A2;
-const int startButton = A3;
+const int forwardButton = A0;
+//const int rightButton = A4;//not used in this deliverable
+const int leftButton = A2;
+const int backButton = A3;
+const int startButton = A1;
 
 //LED output pins
-const int runningLED = 2;
-const int waitingLED = 3;
-const int finishedLED = 4;
-const int powerLED = 5;
+//const int runningLED = 2;
+//const int waitingLED = 3;
+//const int finishedLED = 4;
+const int powerLED = A5;
 
 //Motor output pins
 const int IN1 = 9;
 const int IN2 = 8;
 const int IN3 = 7;
 const int IN4 = 6;
-const int ENB = A0;
-const int ENA = A1;
+const int ENA = 5;
+const int ENB = 4;
 
 //Control settings
 const int MOTOR_SPEED_BYTE = 130;//Values lower than this won't work for unknown reasons
-const int TURN_TIME = 100; //Should turn about 90 degrees
-const int DRIVE_TIME = 1000; //Should drive about 20 centimeters
+const int TURN_TIME = 300; //Should turn about 90 degrees
+const int DRIVE_TIME = 600; //Should drive about 20 centimeters
 const int ACCELERATION_TIME = 2000;
 const int DECELERATION_TIME = 2000;
 const int BUTTON_CHECK_DELAY = 20; //50 Hz refresh rate
-const int FINISHED_DELAY = 2000;
-const int INSTRUCTION_GAP = 800;
-const int START_RUNNING_GAP = 800;
+const int FINISHED_DELAY = 1000;
+const int INSTRUCTION_GAP = 400;
+const int START_RUNNING_GAP = 600;
 
 //Variables for storing instructions
-enum Instruction { FORWARD, BACKWARD, LEFT, RIGHT } ;
+enum Instruction { FORWARD, BACKWARD, LEFT, RIGHT, EMPTY } ;
 List<Instruction> instructions;
 
 //Variables for button inputs
-Instruction pendingInstruction;
+Instruction pendingInstruction = EMPTY;
+Instruction lastInstruction = EMPTY;
 bool pendingStart;
 
 void setup() {
@@ -66,17 +67,20 @@ void setup() {
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
 
+  analogWrite(ENA, 255);
+  analogWrite(ENB, 255);
+
   //Set LEDs as output
-  pinMode(runningLED, OUTPUT);
+//  pinMode(runningLED, OUTPUT);
   pinMode(powerLED, OUTPUT);
-  pinMode(waitingLED, OUTPUT);
-  pinMode(finishedLED, OUTPUT);
+//  pinMode(waitingLED, OUTPUT);
+//  pinMode(finishedLED, OUTPUT);
 
   //Set buttons as input pullups
   pinMode(forwardButton, INPUT_PULLUP);
   pinMode(backButton, INPUT_PULLUP);
   pinMode(leftButton, INPUT_PULLUP);
-  pinMode(rightButton, INPUT_PULLUP);
+//  pinMode(rightButton, INPUT_PULLUP);
   pinMode(startButton, INPUT_PULLUP);
 
   //Turn power LED on
@@ -85,31 +89,37 @@ void setup() {
 
 void loop() {
   //Waiting
-  digitalWrite(finishedLED, LOW);
-  digitalWrite(waitingLED, HIGH);
+//  digitalWrite(finishedLED, LOW);
+//  digitalWrite(waitingLED, HIGH);
   GetInput();
+  delay(1000);
+  
   
   //Running
-  digitalWrite(waitingLED, LOW);
-  digitalWrite(runningLED, HIGH);
+//  digitalWrite(waitingLED, LOW);
+//  digitalWrite(runningLED, HIGH);
   delay(START_RUNNING_GAP);
   RunInstructions();
 
   //Finished
-  digitalWrite(runningLED, LOW);
-  digitalWrite(finishedLED, HIGH);
+  Serial.println("FINISHED RUNNING... RESTARTING");
+//  digitalWrite(runningLED, LOW);
+//  digitalWrite(finishedLED, HIGH);
   delay(FINISHED_DELAY);
+  
 }
 
 ///MAIN FUNCTIONS///
 void GetInput() {  
+  Serial.println("GETTING INPUT");
   while(!pendingStart) {
     //Get input
     CheckButtons();
-    //Apply input
-    if(pendingInstruction != NULL) {
+    //Add input to instructions
+    if(pendingInstruction != EMPTY) {
       instructions.add(pendingInstruction);
-      pendingInstruction = NULL;
+      lastInstruction = pendingInstruction;
+      pendingInstruction = EMPTY;
     }
     delay(BUTTON_CHECK_DELAY);
   }
@@ -127,12 +137,28 @@ void RunInstructions() {
 
 ///INPUT BUTTONS///
 void CheckButtons() {
+  //Wait for last button to be released
+  if(lastInstruction != EMPTY) {
+    int checkButton;
+    switch(lastInstruction) {
+      case FORWARD: checkButton = forwardButton; break;
+      case BACKWARD: checkButton = backButton; break;
+      case LEFT: checkButton = leftButton; break;
+//      case RIGHT: checkButton = rightButton; break;
+    }
+    //Check the button is not being pressed
+    if(digitalRead(checkButton) == HIGH) {
+      lastInstruction = EMPTY;
+    }
+    else return;
+    
+  }
   //Because buttons are pullup, LOW is when pressed
-  if(digitalRead(forwardButton) == LOW) pendingInstruction = FORWARD;
-  else if(digitalRead(backButton) == LOW) pendingInstruction = BACKWARD;
-  else if(digitalRead(leftButton) == LOW) pendingInstruction = LEFT;
-  else if(digitalRead(rightButton) == LOW) pendingInstruction = RIGHT;
-  else if(digitalRead(startButton) == LOW) pendingStart = true; 
+  if(digitalRead(forwardButton) == LOW) {pendingInstruction = FORWARD; Serial.println("FORWARD PRESSED"); }
+  else if(digitalRead(backButton) == LOW) {pendingInstruction = BACKWARD; Serial.println("BACKWARD PRESSED"); }
+  else if(digitalRead(leftButton) == LOW) {pendingInstruction = LEFT; Serial.println("LEFT PRESSED"); }
+//  else if(digitalRead(rightButton) == LOW) {pendingInstruction = RIGHT; Serial.println("RIGHT PRESSED"); }
+  else if(digitalRead(startButton) == LOW) {pendingStart = true; Serial.println("START PRESSED"); }
 }
 
 ///INSTRUCTION INTERPRETATION///
@@ -165,14 +191,14 @@ void Decelerate() {
 
 ///MOTOR CONTROL FUNCTIONS///
 void Stop() {
-  Serial.println("Stopping");
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, LOW);
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
 }
 void Drive(bool forward) {
-  Serial.println("Driving: " + forward);
+  Serial.print("Driving ");
+  Serial.println(forward ? " forward" : " backward");
   digitalWrite(IN1, forward);
   digitalWrite(IN2, !forward);
   digitalWrite(IN3, forward);
@@ -180,7 +206,8 @@ void Drive(bool forward) {
   delay(DRIVE_TIME);
 }
 void Turn(bool left) {
-  Serial.println("Turning: " + left);
+  Serial.print("Turning ");
+  Serial.println(left ? " left" : " right");
   digitalWrite(IN1, left);
   digitalWrite(IN2, !left);
   digitalWrite(IN3, !left);
