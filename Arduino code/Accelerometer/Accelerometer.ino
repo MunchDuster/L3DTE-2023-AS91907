@@ -1,51 +1,63 @@
-#include "Wire.h"
-#include "I2Cdev.h"
+//MPU6050 accelerometer test 3
+//PID controller on the direction of the car to face the target direction
+
+//Wiring:
+//Arduino - MPU6050
+//A5 - SCL/SDA
+//A4 - SDA/SCL
+//5V - VCC
+//GND - GND
+
 #include "MPU6050.h"
 
+//Controls - Tuning required
+const double proportionalFactor = 200;
+const double integratedFactor = 50;
+const double derivativeFactor = 700;
+const double refreshRateHertz = 60;
+const double targetAngleDegrees = 90;
+const double gyroScaleFactor = 1.0 / 131.0; //Magic number from who knows where
+
+//Main vars
 MPU6050 accelgyro;
-
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
-
-double accX, accY, accZ;
-double gyroX;
-double gyroXangle;
-
-uint32_t timer; // Adding timer variable
+int16_t rawGyroZ; //Z angle is yaw
+uint32_t lastTimeMicroseconds, curTimeMicroseconds, deltaTimeSeconds;
+double angleDegrees, deltaAngleDegrees, error, outputPID, proportionalValue, integratedValue, derivativeValue;
 
 void setup() {
-    Wire.begin();
-    Serial.begin(9600);
-    accelgyro.initialize();
+  //Initialize serial
+  Serial.begin(9600);
 
-    Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
-   
-    // Initialize kalman filter with the initial angle
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    accX = atan((double)ay / sqrt((double)ax * ax + (double)az * az)) * RAD_TO_DEG;
-
-    timer = micros(); // Initialize timer at the end of setup
+  //Initialize MPU6050
+  Wire.begin();
+  accelgyro.initialize();
+  Serial.print(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+  
+  //Initialize timer
+  lastTimeMicroseconds = micros();
+  curTimeMicroseconds = micros();
 }
 
 void loop() {
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-   
-    // Calculate pitch and roll from the raw data
-    accX = atan((double)ay / sqrt((double)ax * ax + (double)az * az)) * RAD_TO_DEG;
-    gyroX = (double)gx / 131.0;
+  //Timer//
+  curTimeMicroseconds = micros();
+  deltaTimeSeconds = (double)(curTimeMicroseconds - lastTimeMicroseconds) / 1000000.0; // Calculate delta time
+  lastTimeMicroseconds = curTimeMicroseconds; // Update timer
 
-    // Apply the complementary filter to figure out the change in angle - choice of alpha is
-    // estimated now, 1/8 cyc^-1 where a conservative because 1/20 cyc^-1 in accelerometer
-    // 1/256 s^-1 in gyro and 0.01 alpha = 0.04 approx = 1/8
-    // This isn't a true complementary filter due to the code, which has different time values
-    // To make it a true complementary filter, dt should be an exact time difference
-    double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
-    timer = micros(); // Update the timer for the next loop
+  //Data processing//
+  rawGyroZ = accelgyro.getRotationZ(); //Read value from MPU6050
+  deltaAngleDegrees = (double)rawGyroZ  * gyroScaleFactor * deltaTimeSeconds; //Convert to degrees/sec
+  angleDegrees += deltaAngleDegrees;
 
-    gyroXangle = gyroX * dt; // Calculate gyro angle without any filter
+  //PID control//
+  error = targetAngleDegrees - angleDegrees; //Offset from target
+  derivativeValue = -deltaAngleDegrees * derivativeFactor; //Slow down to prevent overshoot
+  proportionalValue = error * proportionalFactor; //Pull towards target
+  integratedValue += error * integratedFactor; //Improve accuracy on target
+  outputPID = derivativeValue + proportionalValue + integratedValue;
 
-   Serial.println(gyroXangle);
-
-    delay(100);
+  //Output and loop delay//
+  Serial.println(angleDegrees); //Log angle to serial
+  Serial.println(outputPID); //Log angle to serial
+  delay((int)(1000.0 / refreshRateHertz));
 }
-
