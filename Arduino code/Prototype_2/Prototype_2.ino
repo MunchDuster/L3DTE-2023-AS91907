@@ -17,25 +17,26 @@
 #include <List.hpp>
 
 //Button input pins
-const int forwardButton = 6;
+const int leftButton = 3;
+const int startButton = 4;
 const int rightButton = 5;
-const int leftButton = 4;
-const int backButton = 3;
-const int startButton = 2;
+const int forwardButton = 6;
+const int backButton = 7;
+
 
 //LED output pins
-const int runningLED = A2;
-const int waitingLED = A1;
-const int powerLED = A0;
+const int runningLED = 10;
+const int waitingLED = 11;
+const int powerLED = 12;
 
 //Motor output pins
-const int IN1 = 10;
-const int IN2 = 9;
-const int IN3 = 8;
-const int IN4 = 7;
+const int IN1 = A0;
+const int IN2 = A1;
+const int IN3 = A2;
+const int IN4 = A3;
 
 //Piezo buzzer pin
-const int buzzer = 11;
+const int buzzer = 9;
 
 //Control settings
 const int TURN_TIME = 300; //Should turn about 90 degrees

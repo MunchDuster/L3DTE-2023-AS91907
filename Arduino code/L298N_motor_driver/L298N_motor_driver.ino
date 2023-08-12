@@ -5,20 +5,18 @@
 //Wiring:
 //L298N - Arduino Nano
 //GND - GND
-//+5V - 5V
-//IN1 - D9
-//IN2 - D8
+//IN4 - A3
+//IN3 - A2
+//IN2 - A1
+//IN1 - A0
 //External battery (Used 9V)
 //+ve - +12V (L298N)
 //-ve - GND (Arduino)
 
-const int IN1 = 9;
-const int IN2 = 8;
-const int IN3 = 7;
-const int IN4 = 6;
-const int ENB = 5;
-const int ENA = 4;
-const int MOTOR_SPEED_BYTE = 130;//Values lower than this won't work for unknown reasons
+const int IN1 = A0;
+const int IN2 = A1;
+const int IN3 = A2;
+const int IN4 = A3;
 
 enum Instruction {FORWARD,BACKWARD,LEFT,RIGHT};
 
@@ -43,12 +41,6 @@ void setup() {
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-
-  //Set motors at correct speed
-  analogWrite(ENA, MOTOR_SPEED_BYTE);
-  analogWrite(ENB, MOTOR_SPEED_BYTE);
 }
 
 void loop() {

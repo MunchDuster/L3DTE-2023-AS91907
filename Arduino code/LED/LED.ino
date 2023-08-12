@@ -1,21 +1,44 @@
 //LED test
-//Tests 1 led, switches on/off every 1 second
+//Tests 3 led, switches on/off every 1 second
 
 //Wiring:
 //LED - Arduino Nano
 //+ve - Resistor - D2
 //-ve - GND
 
-#define waitTime 1000
-#define ledPin 2
+const int powerLED = 10;
+const int waitingLED = 11;
+const int runningLED = 12;
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
+  pinMode(powerLED, OUTPUT);
+  pinMode(waitingLED, OUTPUT);
+  pinMode(runningLED, OUTPUT);
+  Serial.begin(9600);
 }
 
 void loop() {
-  digitalWrite(ledPin, HIGH);
-  delay(waitTime);
-  digitalWrite(ledPin, LOW);
-  delay(waitTime);
+  Serial.println("POWER LED");
+  digitalWrite(powerLED, HIGH);
+  digitalWrite(waitingLED, LOW);
+  digitalWrite(runningLED, LOW);
+  delay(500);
+
+  Serial.println("WAITING LED");
+  digitalWrite(powerLED, LOW);
+  digitalWrite(waitingLED, HIGH);
+  digitalWrite(runningLED, LOW);
+  delay(500);
+
+  Serial.println("RUNNING LED");
+  digitalWrite(powerLED, LOW);
+  digitalWrite(waitingLED, LOW);
+  digitalWrite(runningLED, HIGH);
+  delay(500);
+
+  Serial.println("OFF");
+  digitalWrite(powerLED, LOW);
+  digitalWrite(waitingLED, LOW);
+  digitalWrite(runningLED, LOW);
+  delay(500);
 }
