@@ -1,34 +1,13 @@
-#define waitOff 300
-#define shortBlink 300
-#define longBlink 900
-#define endOfSentenceWait 1500
-#define pin 9
+//Blink test
+
 
 void setup() {
-  pinMode(pin, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
-  //S
-  Blink(longBlink);
-  Blink(longBlink);
-  Blink(longBlink);
-  //O
-  Blink(shortBlink);
-  Blink(shortBlink);
-  Blink(shortBlink);
-  //S
-  Blink(longBlink);
-  Blink(longBlink);
-  Blink(longBlink);
-  //Wait
-  delay(endOfSentenceWait);
-}
-
-void Blink(int blinkTime)
-{
-  digitalWrite(pin, HIGH);
-  delay(blinkTime);
-  digitalWrite(pin, LOW);
-  delay(waitOff);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(500);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(500);
 }
