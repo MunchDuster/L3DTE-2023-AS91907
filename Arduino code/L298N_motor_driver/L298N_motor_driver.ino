@@ -18,20 +18,11 @@ const int IN2 = A1;
 const int IN3 = A2;
 const int IN4 = A3;
 
-enum Instruction {FORWARD,BACKWARD,LEFT,RIGHT};
+//Time in milliseconds
+const int DRIVE_TIME = 1000;
+const int TURN_TIME = 100;
+const int STOP_TIME = 1000;
 
-Instruction instructions[] = {
-  FORWARD,
-  LEFT,
-  FORWARD,
-  LEFT,
-  FORWARD,
-  LEFT,
-  FORWARD,
-  LEFT
-};
-
-int instructionCount = 8;
 
 void setup() {
   Serial.begin(9600);
@@ -44,26 +35,14 @@ void setup() {
 }
 
 void loop() {
-  delay(4000);
-  for(int i = 0; i < instructionCount; i++) {
-    switch(instructions[i]){
-      case FORWARD:
-        Drive(true);
-        break;
-      case BACKWARD:
-        Drive(false);
-        break;
-      case LEFT:
-        Turn(true);
-        break;
-      case RIGHT:
-        Turn(false);
-        break;
-    }
-    delay(200);
-    Stop();
-    delay(1000);
-  }
+  Drive(true);
+  Stop();
+//  Drive(false);
+//  Stop();
+//  Turn(true);
+//  Stop();
+//  Turn(false);
+//  Stop();
 }
 
 void Stop(){
@@ -72,6 +51,7 @@ void Stop(){
   digitalWrite(IN2, LOW);
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
+  delay(STOP_TIME);
 }
 void Drive(bool forward){
   Serial.println("Driving: " + forward);
@@ -79,6 +59,7 @@ void Drive(bool forward){
   digitalWrite(IN2, !forward);
   digitalWrite(IN3, forward);
   digitalWrite(IN4, !forward);
+  delay(DRIVE_TIME);
 }
 void Turn(bool left){
   Serial.println("Turning: " + left);
@@ -86,4 +67,5 @@ void Turn(bool left){
   digitalWrite(IN2, !left);
   digitalWrite(IN3, !left);
   digitalWrite(IN4, left);
+  delay(TURN_TIME);
 }
