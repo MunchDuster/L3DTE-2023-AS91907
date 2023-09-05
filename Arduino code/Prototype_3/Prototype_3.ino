@@ -37,7 +37,7 @@ const double maximumReading = 32767; //Highest reading from sensor (2 byte signe
 const double gyroRangeDegreesPerSecond = 250; //The highest reading from sensor in degrees per second
 const int deltaTimeMilliseconds = 10; //Milliseconds between iterations
 const double deltaTimeSeconds = (double)deltaTimeMilliseconds / 1000.0;
-const double turnReading = 160.0; //Setting the targetOutput of a turn to this value results in a roughly 90 degree turn
+const double turnReading = 90.0; //Setting the targetOutput of a turn to this value results in a roughly 90 degree turn
 
 //Button input pins
 const int leftButton = 11;
@@ -61,7 +61,7 @@ const int IN4 = 6;
 const int buzzer = 2;
 
 //Control settings
-const int TURN_TIME = 900; //Should turn about 90 degrees
+const int TURN_TIME = 1500; //Should turn about 90 degrees
 const int DRIVE_TIME_FORWARD = 600; //Should drive about 20 centimeters
 const int DRIVE_TIME_BACKWARD = 700; //Should drive about 20 centimeters
 const int BRAKE_TIME = 120; //Reverses motors for a short time to brake
