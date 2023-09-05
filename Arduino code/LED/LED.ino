@@ -6,9 +6,9 @@
 //+ve - Resistor - D2
 //-ve - GND
 
-const int powerLED = 10;
-const int waitingLED = 11;
-const int runningLED = 12;
+const int powerLED = 5;
+const int waitingLED = 6;
+const int runningLED = 7;
 
 void setup() {
   pinMode(powerLED, OUTPUT);
@@ -22,23 +22,17 @@ void loop() {
   digitalWrite(powerLED, HIGH);
   digitalWrite(waitingLED, LOW);
   digitalWrite(runningLED, LOW);
-  delay(500);
+  delay(2000);
 
   Serial.println("WAITING LED");
   digitalWrite(powerLED, LOW);
   digitalWrite(waitingLED, HIGH);
   digitalWrite(runningLED, LOW);
-  delay(500);
+  delay(2000);
 
   Serial.println("RUNNING LED");
   digitalWrite(powerLED, LOW);
   digitalWrite(waitingLED, LOW);
   digitalWrite(runningLED, HIGH);
-  delay(500);
-
-  Serial.println("OFF");
-  digitalWrite(powerLED, LOW);
-  digitalWrite(waitingLED, LOW);
-  digitalWrite(runningLED, LOW);
-  delay(500);
+  delay(2000);
 }

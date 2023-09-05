@@ -5,11 +5,11 @@
 
 const int BUTTON_CHECK_DELAY = 30;
 
-const int leftButton = 3;
-const int startButton = 4;
-const int rightButton = 5;
-const int forwardButton = 6;
-const int backButton = 7;
+const int leftButton = 8;
+const int startButton = 9;
+const int rightButton = 10;
+const int forwardButton = 11;
+const int backButton = 12;
 
 //Variables for storing instructions
 enum Instruction { EMPTY, FORWARD, BACKWARD, LEFT, RIGHT } ;
@@ -67,7 +67,10 @@ void CheckButtons() {
     if(digitalRead(checkButton) == HIGH) {
       lastInstruction = EMPTY;
     }
-    else return;
+    else {
+      Serial.println("STILL PRESSED");
+      return;
+    }
   }
   //Because buttons are pullup, LOW is when pressed
   if(digitalRead(forwardButton) == LOW) {pendingInstruction = FORWARD; Serial.println("FORWARD PRESSED"); }

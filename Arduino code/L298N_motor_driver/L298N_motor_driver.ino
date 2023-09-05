@@ -13,10 +13,10 @@
 //+ve - +12V (L298N)
 //-ve - GND (Arduino)
 
-const int IN1 = A0;
-const int IN2 = A1;
-const int IN3 = A2;
-const int IN4 = A3;
+const int IN1 = 3;
+const int IN2 = 4;
+const int IN3 = 5;
+const int IN4 = 6;
 
 //Time in milliseconds
 const int DRIVE_TIME = 1000;
