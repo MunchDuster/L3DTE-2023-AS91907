@@ -25,11 +25,11 @@
 //(+ of backward button) - D9
 //(+ of go button) - D8
 
-#include <List.hpp>
 #include <MPU6050.h>
 
-//Note: EMPTY needed otherwise using NULL, FORWARD = 0 but also NULL = 0
-enum Instruction { FORWARD, BACKWARD, LEFT, RIGHT, EMPTY };
+//Note: EMPTY needed otherwise using NULL, FORWARD = 0
+enum Instruction { FORWARD, BACKWARD, LEFT, RIGHT };
+
 
 //Accelerometer (MPU6050) constants
 const double minimumReading = -32768; //Lowest reading from sensor (2 byte signed number)
@@ -102,12 +102,15 @@ MPU6050 accelgyro; //variable to communicate with sensor
 int16_t ax, ay, az, gx, gy, gz; //holds sensor raw output values
 
 //Instruction list for holding inputs to execute
-List<Instruction> instructions;
+Instruction instructions[200]; //Assuming never gets more than array length instructions
+int instructionCount = 0;
+int instructionIndex = 0;
 
 //Button input variables
-Instruction pendingInstruction = EMPTY;
-Instruction lastInstruction = EMPTY;
-bool pendingStart;
+Instruction pendingInstruction;
+bool isWaitingButtonRelease = false;
+bool isPendingInstruction = false;
+bool isPendingStart = false;
 
 //Motor state variables
 int motorLeft;
@@ -171,29 +174,30 @@ void loop() {
 ///MAIN FUNCTIONS///
 void GetInput() {
   Serial.println("GETTING INPUT");
-  while (!pendingStart) {
+  instructionCount = 0;
+  while (!isPendingStart) {
     //Get input
-    CheckButtons();
+    ReadButtons();
     //Add input to instructions
-    if (pendingInstruction != EMPTY) {
+    if (isPendingInstruction) {
       //Play input song if button pressed
       playSong(1);
       //Add to list
-      instructions.add(pendingInstruction);
+      instructions[instructionCount++] = pendingInstruction;
       //Update
-      lastInstruction = pendingInstruction;
-      pendingInstruction = EMPTY;
+      isPendingInstruction = false;
       Serial.println("ADDING INSTRUCTION");
     }
 
     delay(BUTTON_CHECK_DELAY);
   }
-  pendingStart = false;
-  pendingInstruction = EMPTY;
+  isPendingStart = false;
+  isPendingInstruction = false;
 }
 void RunInstructions() {
-  for (int i = 0; i < instructions.getSize(); i++) {
-    switch (instructions.getValue(i)) {
+  instructionIndex = 0;
+  for (int i = 0; i < instructionCount; i++) {
+    switch (instructions[i]) {
       case FORWARD: Drive(1); break;
       case BACKWARD: Drive(-1); break;
       case LEFT: Turn(1); break;
@@ -203,51 +207,49 @@ void RunInstructions() {
     playSong(3);
     Stop(INSTRUCTION_GAP);
   }
-  
-  instructions.clear();
 }
 
 ///INPUT BUTTONS///
-void CheckButtons() {
+void ReadButtons() {
+  bool isForwardPressed = !digitalRead(forwardButton);
+  bool isBackPressed = !digitalRead(backButton);
+  bool isRightPressed = !digitalRead(rightButton);
+  bool isLeftPressed = !digitalRead(leftButton);
+  bool isGoPressed = !digitalRead(goButton);
+
   //Wait for last button to be released
-  if (lastInstruction != EMPTY) {
-    int checkButton;
-    switch (lastInstruction) {
-      case FORWARD: checkButton = forwardButton; break;
-      case BACKWARD: checkButton = backButton; break;
-      case LEFT: checkButton = leftButton; break;
-      case RIGHT: checkButton = rightButton; break;
-    }
+  if (isWaitingButtonRelease) {
+    bool isAnyPressed = isForwardPressed || isBackPressed || isRightPressed || isLeftPressed;
     //Check the button is not being pressed
-    if (digitalRead(checkButton) == HIGH) {
-      lastInstruction = EMPTY;
+    if (isAnyPressed) {
+      isWaitingButtonRelease = false;
     }
     else {
       Serial.println("NOT UNPRESSED, SKIPPING");
       return;
     }
   }
-  //Because buttons are pullup, LOW is when pressed
-  if (digitalRead(forwardButton) == LOW) {  
+
+  if (isForwardPressed) {
     pendingInstruction = FORWARD;
     Serial.println("FORWARD PRESSED");
   }
-  if (digitalRead(backButton) == LOW) {
+  if (isBackPressed) {
     pendingInstruction = BACKWARD;
     Serial.println("BACKWARD PRESSED");
   }
-  if (digitalRead(leftButton) == LOW) {
+  if (isRightPressed) {
     pendingInstruction = LEFT;
     Serial.println("LEFT PRESSED");
   }
-  if (digitalRead(rightButton) == LOW) {
+  if (isLeftPressed) {
     pendingInstruction = RIGHT;
     Serial.println("RIGHT PRESSED");
   }
-    if (digitalRead(goButton) == LOW) {
-      pendingStart = true;
-      Serial.println("START PRESSED");
-    }
+  if (isGoPressed) {
+    isPendingStart = true;
+    Serial.println("START PRESSED");
+  }
 }
 
 ///MOTOR CONTROL FUNCTIONS///
