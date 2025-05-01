@@ -64,16 +64,11 @@ const int READ_GAP = 5; //Milliseconds between each MPU6050 reading
 const int REFRESH_RATE = 100; //FPS in Hz
 const int DELTA_TIME = 1000 / REFRESH_RATE; //Milliseconds between frames
 const int BUTTON_CHECK_DELAY = 20; //50 Hz refresh rate
-const int FINISHED_GAP = 200;
-const int INSTRUCTION_GAP = 200;
-const int START_RUNNING_GAP = 1000;
 
 //PID settings
 const double proportionalFactor = 60;
 const double integralFactor = 0;
 const double derivativeFactor = 20;
-
-double turnReading = 90.0; //Setting the targetOutput of a turn to this value results in a roughly 90 degree turn
 
 //Piezo buzzer song data
 //Song array order: 0 is number of notes in song, 1 is noteNumber, 2 is noteDuration, 3 is noteGap (repeat 1,2,3)
@@ -86,28 +81,21 @@ const int songs[5][17] = {
 };
 
 //PID variables
-double outputDerivative; //Sensor reads in degrees/second, must be integrated to get output
-double output; // In degrees, the actual sensor output value
-double targetOutput; // In degrees, the ideal output value
-double errorDerivative; // In degrees per second
-double error; // The difference between the output and targetOutput
-double errorIntegral; // In degrees seconds
-double pidValue; //The PID output value (combined error, errorDerivative and errorIntegral)
+double outputDerivative; // sensor reads in degrees/second, must be integrated to get output
+double output; // in degrees, the actual sensor output value
+double targetOutput; // in degrees, the ideal output value
+double errorDerivative; // in degrees per second
+double error; // the difference between the output and targetOutput
+double errorIntegral; // in degrees seconds
+double pidValue; // the PID output value (combined error, errorDerivative and errorIntegral)
 
 //Accelerometer variables
-MPU6050 accelgyro; //variable to communicate with sensor
-int16_t ax, ay, az, gx, gy, gz; //holds sensor raw output values
+MPU6050 accelgyro; // variable to communicate with sensor
+int16_t ax, ay, az, gx, gy, gz; // holds sensor raw output values
 
-//Instruction list for holding inputs to execute
-Instruction instructions[200]; //Assuming never gets more than array length instructions
-int instructionCount = 0;
-int instructionIndex = 0;
 
-//Button input variables
-Instruction pendingInstruction;
-bool isWaitingButtonRelease = false;
-bool isPendingInstruction = false;
-bool isPendingStart = false;
+byte throttle, steer; // raw instructions from controller
+double throttle, steer; // processed instructions from controller
 
 //Motor state variables
 int motorLeft;
@@ -143,49 +131,18 @@ void setup() {
 }
 
 void loop() {
-  //Waiting
-  digitalWrite(runningLED, LOW);
-  digitalWrite(waitingLED, HIGH);
   GetInput();
-
-  //Running
-  digitalWrite(waitingLED, LOW);
-  digitalWrite(runningLED, HIGH);
-  //Play running song
-  playSong(2);
+  UpdateStatus("Idle", "X:" + GetDisplayFloat(valueX) + " Y:" + GetDisplayFloat(valueY));
   delay(START_RUNNING_GAP);
   RunInstructions();
-
-  //Finished
-  Serial.println("FINISHED RUNNING");
-  //Play finished all instructions song
-  playSong(4);
   delay(FINISHED_GAP);
 }
 
 ///MAIN FUNCTIONS///
 void GetInput() {
-  Serial.println("GETTING INPUT");
-  instructionCount = 0;
-  while (!isPendingStart) {
-    //Get input
-    ReadButtons();
-    //Add input to instructions
-    if (isPendingInstruction) {
-      //Play input song if button pressed
-      playSong(1);
-      //Add to list
-      instructions[instructionCount++] = pendingInstruction;
-      //Update
-      isPendingInstruction = false;
-      Serial.println("ADDING INSTRUCTION");
-      Serial.println(instructionCount);
-    }
+  // Use wireless device to scan for instructions
+  // Record input throttle and steer
 
-    delay(BUTTON_CHECK_DELAY);
-  }
-  isPendingStart = false;
-  isPendingInstruction = false;
 }
 void RunInstructions() {
   instructionIndex = 0;
@@ -209,19 +166,6 @@ void ReadButtons() {
   bool isRightPressed = !digitalRead(rightButton);
   bool isLeftPressed = !digitalRead(leftButton);
   bool isGoPressed = !digitalRead(goButton);
-
-  //Wait for last button to be released
-  if (isWaitingButtonRelease) {
-    bool isAnyPressed = isForwardPressed || isBackPressed || isRightPressed || isLeftPressed;
-    //Check the button is not being pressed
-    if (isAnyPressed) {
-      isWaitingButtonRelease = false;
-    }
-    else {
-      Serial.println("NOT UNPRESSED, SKIPPING");
-      return;
-    }
-  }
 
   if (isForwardPressed) {
     pendingInstruction = FORWARD;
